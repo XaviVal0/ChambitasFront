@@ -1,53 +1,43 @@
-<div class="max-w-3xl mx-auto px-6 py-16 font-sans text-stone-900 bg-stone-50/50 min-h-screen">
+<div class="min-h-screen bg-gray-50">
+  <!-- Navbar -->
+  <nav class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-gray-800">Panel Principal</h1>
+    <button
+      (click)="logout()"
+      class="text-sm font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors">
+      Cerrar Sesión
+    </button>
+  </nav>
 
-  <!-- Header / Navbar sobrio -->
-  <header class="flex justify-between items-center pb-12 border-b border-stone-200">
-    <span class="font-bold text-lg tracking-tight text-stone-900">chambitas.</span>
-    <div class="flex items-center gap-6 text-sm text-stone-600 font-medium">
-      <a href="#" class="hover:text-stone-900 transition-colors">Entrar</a>
-      <a href="#" class="bg-stone-900 hover:bg-stone-800 text-stone-50 px-4 py-2 rounded transition-colors text-xs font-semibold">Publicar</a>
-    </div>
-  </header>
-
-  <!-- Hero principal -->
-  <main class="py-12">
-    <h1 class="text-3xl sm:text-4xl font-normal text-stone-900 leading-snug tracking-tight max-w-xl">
-      Una red sencilla para encargar u ofrecer trabajos del hogar.
-    </h1>
-
-    <p class="text-stone-600 mt-6 text-base leading-relaxed max-w-lg">
-      Conectamos personas que necesitan resolver un pendiente (plomería, pintura, limpieza) con trabajadores independientes de su colonia. Sin intermediarios ni comisiones raras.
-    </p>
-
-    <!-- Puntos clave en lista limpia, no en cards -->
-    <div class="mt-12 pt-8 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-8">
-      <div>
-        <h2 class="font-semibold text-stone-900 text-sm">Para quien busca ayuda</h2>
-        <p class="text-stone-500 text-xs mt-2 leading-relaxed">
-          Publicas lo que necesitas, recibes postulaciones de vecinos capacitados y acuerdas el precio directo con ellos.
-        </p>
-      </div>
-
-      <div>
-        <h2 class="font-semibold text-stone-900 text-sm">Para quien ofrece servicio</h2>
-        <p class="text-stone-500 text-xs mt-2 leading-relaxed">
-          Encuentra chambas cerca de ti, postulate a las que se adapten a tus tiempos y construye tu reputación local.
-        </p>
-      </div>
+  <!-- Contenido -->
+  <main class="max-w-6xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-lg font-semibold text-gray-700">Catálogo de Habilidades</h2>
     </div>
 
-    <!-- Llamado a la acción sutil -->
-    <div class="mt-12 pt-8 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <span class="text-xs text-stone-500">¿Tienes un proyecto o tarea pendiente?</span>
-      <div class="flex gap-3">
-        <button class="bg-stone-900 hover:bg-stone-800 text-stone-100 text-xs font-medium px-4 py-2.5 rounded transition-colors">
-          Explorar publicaciones
-        </button>
-        <button class="border border-stone-300 hover:border-stone-400 text-stone-800 text-xs font-medium px-4 py-2.5 rounded transition-colors">
-          Crear cuenta
-        </button>
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-12">
+        <p class="text-gray-500 text-sm animate-pulse">Cargando habilidades del backend...</p>
       </div>
-    </div>
+    } @else if (errorMessage()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md text-sm">
+        {{ errorMessage() }}
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        @for (skill of skills(); track skill.id) {
+          <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow transition-shadow">
+            <h3 class="font-semibold text-gray-900 text-base">{{ skill.name }}</h3>
+            <p class="text-sm text-gray-500 mt-2">
+              {{ skill.description || 'Sin descripción detallada.' }}
+            </p>
+          </div>
+        } @empty {
+          <div class="col-span-full text-center py-10 bg-white rounded-lg border border-dashed border-gray-300">
+            <p class="text-gray-500 text-sm">No hay habilidades registradas en el backend.</p>
+          </div>
+        }
+      </div>
+    }
   </main>
-
 </div>
