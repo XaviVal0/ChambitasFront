@@ -1,0 +1,139 @@
+<div class="min-h-screen bg-gray-50 flex flex-col font-sans">
+  <!-- Barra de Navegación -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          S
+        </div>
+        <h1 class="text-xl font-bold text-gray-800">Panel Principal</h1>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <a
+          routerLink="/profile"
+          class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+          Mi Perfil
+        </a>
+        <button
+          (click)="logout()"
+          class="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-md transition-colors">
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6">
+    <!-- Encabezado de Sección y Botón Agregar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Catálogo de Habilidades</h2>
+        <p class="text-sm text-gray-500">Consulta las habilidades registradas en el backend NestJS.</p>
+      </div>
+      <button
+        (click)="openModal()"
+        class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer">
+        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nueva Habilidad
+      </button>
+    </div>
+
+    <!-- Error al cargar -->
+    @if (errorMessage()) {
+      <div class="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-sm flex justify-between items-center">
+        <span>{{ errorMessage() }}</span>
+        <button (click)="fetchSkills()" class="underline font-medium hover:text-red-800">Reintentar</button>
+      </div>
+    }
+
+    <!-- Estado de Carga -->
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p class="mt-4 text-sm text-gray-500">Cargando habilidades...</p>
+      </div>
+    } @else {
+      <!-- Listado de Habilidades -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (skill of skills(); track skill.id) {
+          <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-gray-900 text-base">{{ skill.name }}</h3>
+                @if (skill.id) {
+                  <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
+                    #{{ skill.id }}
+                  </span>
+                }
+              </div>
+              <p class="text-sm text-gray-600 leading-relaxed">
+                {{ skill.description || 'Sin descripción disponible.' }}
+              </p>
+            </div>
+          </div>
+        } @empty {
+          <!-- Estado Vacío -->
+          <div class="col-span-full bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">No hay habilidades registradas</h3>
+            <p class="mt-1 text-sm text-gray-500">Crea la primera habilidad haciendo clic en el botón superior.</p>
+          </div>
+        }
+      </div>
+    }
+  </main>
+
+  <!-- Modal para Crear Habilidad -->
+  @if (showModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Agregar Nueva Habilidad</h3>
+
+        <form (ngSubmit)="saveSkill()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <input
+              type="text"
+              name="name"
+              [(ngModel)]="newSkill.name"
+              placeholder="Ej. NestJS, Angular, TypeScript"
+              required
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <textarea
+              name="description"
+              [(ngModel)]="newSkill.description"
+              rows="3"
+              placeholder="Describe en qué consiste esta habilidad..."
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              (click)="closeModal()"
+              [disabled]="isSubmitting()"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="!newSkill.name.trim() || isSubmitting()"
+              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer">
+              {{ isSubmitting() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,93 @@
+<div class="min-h-screen bg-gray-50 flex flex-col font-sans">
+  <!-- Navbar -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <a routerLink="/" class="text-sm font-medium text-gray-500 hover:text-indigo-600 flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Volver a Inicio
+        </a>
+      </div>
+
+      <button
+        (click)="logout()"
+        class="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-md transition-colors">
+        Cerrar Sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <!-- Tarjeta de Perfil -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
+      <div class="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-2xl">
+        U
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Mi Perfil</h2>
+        <p class="text-sm text-gray-500">Administra tus habilidades técnicas vinculadas.</p>
+      </div>
+    </div>
+
+    <!-- Asignar nueva habilidad -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <h3 class="text-base font-bold text-gray-800 mb-3">Vincular una Habilidad</h3>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <select
+          [(ngModel)]="selectedSkillId"
+          class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+          <option [ngValue]="null" disabled>Selecciona una habilidad del catálogo...</option>
+          @for (skill of allSkills(); track skill.id) {
+            <option [value]="skill.id">{{ skill.name }}</option>
+          }
+        </select>
+
+        <button
+          (click)="assignSkill()"
+          [disabled]="!selectedSkillId || isAssigning()"
+          class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer whitespace-nowrap">
+          {{ isAssigning() ? 'Asignando...' : 'Asignar a mi perfil' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Listado de Habilidades Asignadas -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <h3 class="text-base font-bold text-gray-800 mb-4">Habilidades Asignadas</h3>
+
+      @if (isLoading()) {
+        <div class="py-10 text-center text-sm text-gray-500 animate-pulse">
+          Cargando tus habilidades...
+        </div>
+      } @else {
+        <div class="divide-y divide-gray-100">
+          @for (item of mySkills(); track item.id) {
+            <div class="py-3.5 flex items-center justify-between">
+              <div>
+                <span class="font-medium text-gray-900 text-sm">
+                  {{ item.skill?.name || 'Habilidad #' + item.skillId }}
+                </span>
+                @if (item.skill?.description) {
+                  <p class="text-xs text-gray-500 mt-0.5">{{ item.skill?.description }}</p>
+                }
+              </div>
+              <button
+                (click)="removeSkill(item.id)"
+                class="text-xs text-red-600 hover:text-red-800 font-medium px-2.5 py-1 rounded hover:bg-red-50 transition-colors">
+                Desvincular
+              </button>
+            </div>
+          } @empty {
+            <div class="py-8 text-center text-sm text-gray-500">
+              Aún no tienes habilidades vinculadas a tu cuenta.
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</div>
