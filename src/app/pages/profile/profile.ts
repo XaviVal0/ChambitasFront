@@ -14,15 +14,15 @@ export class Profile implements OnInit {
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
 
-  // Estados de datos
   allSkills = signal<Skill[]>([]);
   mySkills = signal<UserSkill[]>([]);
   isLoading = signal<boolean>(true);
   isAssigning = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
-  // Selector para asignar habilidad
   selectedSkillId: number | null = null;
+
+  currentUserId = this.authService.getCurrentUser()?.id;
 
   ngOnInit(): void {
     this.loadData();
@@ -32,14 +32,13 @@ export class Profile implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // Cargar catálogo general y asignaciones
     this.apiService.getSkills().subscribe({
       next: (skills) => {
         this.allSkills.set(skills);
         this.loadUserSkills();
       },
       error: () => {
-        this.errorMessage.set('Error al cargar la información del perfil.');
+        this.errorMessage.set('Error al cargar la información.');
         this.isLoading.set(false);
       }
     });
@@ -47,8 +46,15 @@ export class Profile implements OnInit {
 
   loadUserSkills(): void {
     this.apiService.getUserSkills().subscribe({
-      next: (userSkills) => {
-        this.mySkills.set(userSkills);
+      next: (allUserSkills) => {
+        if (this.currentUserId) {
+          const filtered = allUserSkills.filter(
+            (item: any) => item.userId === this.currentUserId || item.user?.id === this.currentUserId
+          );
+          this.mySkills.set(filtered);
+        } else {
+          this.mySkills.set(allUserSkills);
+        }
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
@@ -56,12 +62,14 @@ export class Profile implements OnInit {
   }
 
   assignSkill(): void {
-    if (!this.selectedSkillId) return;
+    if (!this.selectedSkillId || !this.currentUserId) return;
 
     this.isAssigning.set(true);
 
-    // Asigna la habilidad (el backend infiere el usuario por el token JWT o payload)
-    const payload = { userId: 1, skillId: Number(this.selectedSkillId) };
+    const payload = {
+      userId: Number(this.currentUserId),
+      skillId: Number(this.selectedSkillId)
+    };
 
     this.apiService.assignSkillToUser(payload).subscribe({
       next: (newRelation) => {
