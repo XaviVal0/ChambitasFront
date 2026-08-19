@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-jobs',
+  standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './jobs.html',
   styleUrl: './jobs.css',
@@ -22,9 +23,6 @@ export class Jobs implements OnInit {
   showCreateModal = signal<boolean>(false);
   showApplyModal = signal<boolean>(false);
 
-  currentUser = this.authService.getCurrentUser();
-
-  // Formulario ajustado a CreateJobDto
   newJob = {
     title: '',
     description: '',
@@ -60,7 +58,8 @@ export class Jobs implements OnInit {
   }
 
   saveJob(): void {
-    const currentUserId = Number(this.currentUser?.id);
+    const currentUser = this.authService.getCurrentUser();
+    const currentUserId = Number(currentUser?.id);
 
     if (!this.newJob.title?.trim() || !this.newJob.description?.trim() || this.newJob.price === null) {
       alert('Por favor completa todos los campos requeridos.');
@@ -69,9 +68,8 @@ export class Jobs implements OnInit {
 
     this.isSubmitting.set(true);
 
-    // Payload idéntico a CreateJobDto
     const payload = {
-      userId: Number(currentUserId) || 1,
+      userId: currentUserId || 1,
       title: this.newJob.title.trim(),
       description: this.newJob.description.trim(),
       price: Number(this.newJob.price)
@@ -97,21 +95,28 @@ export class Jobs implements OnInit {
   }
 
   submitApplication(): void {
-    const workerId = Number(this.currentUser?.id);
-    if (!this.selectedJobForApply?.id || !workerId) return;
+    const currentUser = this.authService.getCurrentUser();
+    const currentUserId = Number(currentUser?.id);
+
+    if (!this.selectedJobForApply?.id || !currentUserId) {
+      alert('No se pudo identificar tu sesión. Por favor inicia sesión nuevamente.');
+      return;
+    }
 
     this.isSubmitting.set(true);
 
+    // Se envía 'userId' tal como lo exige el validador del backend
     const payload = {
       jobId: Number(this.selectedJobForApply.id),
-      workerId: workerId,
-      message: this.applicationMessage
+      userId: currentUserId,
+      message: this.applicationMessage.trim()
     };
 
     this.apiService.applyToJob(payload).subscribe({
       next: () => {
         this.isSubmitting.set(false);
         this.showApplyModal.set(false);
+        this.applicationMessage = '';
         alert('¡Te has postulado con éxito!');
       },
       error: (err) => {

@@ -28,6 +28,7 @@ export interface Job {
 export interface Application {
   id?: number;
   jobId: number;
+  userId?: number;
   workerId: number;
   status?: string;
   message?: string;
@@ -42,6 +43,16 @@ export interface Contract {
   userId: number;
   job?: Job;
   status?: string;
+}
+
+export interface Review {
+  id?: number;
+  contractId: number;
+  reviewerId: number;
+  reviewedUserId: number;
+  rating: number;
+  comment: string;
+  createdAt?: string;
 }
 
 @Injectable({
@@ -80,7 +91,7 @@ export class ApiService {
   getApplications(): Observable<Application[]> {
     return this.http.get<Application[]>(`${this.API_URL}/applications`);
   }
-  applyToJob(data: { jobId: number; workerId: number; message?: string }): Observable<Application> {
+  applyToJob(data: { jobId: number; userId: number; message?: string }): Observable<Application> {
     return this.http.post<Application>(`${this.API_URL}/applications`, data);
   }
   updateApplicationStatus(id: number | string, status: string): Observable<Application> {
@@ -93,5 +104,14 @@ export class ApiService {
   }
   createContract(contract: { matchId: number; jobId: number; userId: number }): Observable<Contract> {
     return this.http.post<Contract>(`${this.API_URL}/contracts`, contract);
+  }
+
+  // --- REVIEWS ---
+  getReviews(): Observable<Review[]> {
+    return this.http.get<Review[]>(`${this.API_URL}/reviews`);
+  }
+
+  createReview(review: Review): Observable<Review> {
+    return this.http.post<Review>(`${this.API_URL}/reviews`, review);
   }
 }
