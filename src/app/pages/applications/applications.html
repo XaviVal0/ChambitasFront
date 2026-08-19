@@ -116,11 +116,9 @@
                 {{ contract.job?.title || 'Trabajo ID #' + contract.jobId }}
               </h4>
 
-              @if (contract.amount || contract.job?.price) {
-                <p class="text-sm font-semibold text-emerald-700 mb-2">
-                  ${{ contract.amount || contract.job?.price }} MXN
-                </p>
-              }
+              @if (contract.job?.price) {
+  ${{ contract.job?.price }} MXN
+}
 
               <div class="text-xs text-gray-500 space-y-0.5 border-t border-gray-100 pt-2 mt-2">
                 <p><span class="font-medium text-gray-700">Match ID:</span> #{{ contract.matchId }}</p>
