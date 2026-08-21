@@ -1,0 +1,83 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative border border-gray-100">
+
+    <!-- Encabezado -->
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h3 class="text-lg font-bold text-gray-900">Calificar Servicio</h3>
+        <p class="text-xs text-gray-500 mt-0.5">
+          Contrato #{{ contractId }}
+          @if (jobTitle) {
+            • <span class="font-medium text-gray-700">{{ jobTitle }}</span>
+          }
+        </p>
+      </div>
+      <button
+        (click)="onCancel()"
+        type="button"
+        class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+        ✕
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="space-y-5">
+      <!-- Selector de Estrellas -->
+      <div class="flex flex-col items-center justify-center py-3 bg-gray-50 rounded-xl border border-gray-100">
+        <span class="text-xs font-medium text-gray-500 mb-1">¿Qué tal fue la experiencia?</span>
+        <div class="flex items-center space-x-1" (mouseleave)="clearHover()">
+          @for (star of [1, 2, 3, 4, 5]; track star) {
+            <button
+              type="button"
+              (click)="setRating(star)"
+              (mouseenter)="setHover(star)"
+              class="text-3xl transition-transform hover:scale-125 focus:outline-none p-0.5 cursor-pointer"
+              [class.text-amber-400]="star <= (hoverRating() || rating())"
+              [class.text-gray-300]="star > (hoverRating() || rating())">
+              ★
+            </button>
+          }
+        </div>
+        <span class="text-xs font-bold text-amber-600 mt-1">
+          {{ (hoverRating() || rating()) }} de 5 estrellas
+        </span>
+      </div>
+
+      <!-- Comentario -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+          Comentario o testimonio
+        </label>
+        <textarea
+          [(ngModel)]="comment"
+          name="comment"
+          rows="3"
+          placeholder="Describe la puntualidad, calidad del trabajo y trato profesional..."
+          required
+          class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder:text-gray-400"></textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-end items-center gap-3 pt-2">
+        <button
+          type="button"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="!comment.trim() || isSubmitting()"
+          class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-md transition-all cursor-pointer">
+          {{ isSubmitting() ? 'Enviando...' : 'Enviar Reseña' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

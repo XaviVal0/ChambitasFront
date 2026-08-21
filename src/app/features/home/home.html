@@ -1,53 +1,93 @@
-<div class="max-w-3xl mx-auto px-6 py-16 font-sans text-stone-900 bg-stone-50/50 min-h-screen">
+<div class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+  <!-- Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+      <div class="flex items-center space-x-8">
+        <a routerLink="/" class="text-xl font-extrabold tracking-tight text-emerald-800">Chambitas</a>
+        <nav class="hidden sm:flex space-x-6 text-sm font-medium text-slate-600">
+          <a routerLink="/" class="text-emerald-800 border-b-2 border-emerald-700 pb-1 font-semibold">Inicio</a>
+          <a routerLink="/jobs" class="hover:text-emerald-800 pb-1 transition-colors">Bolsa de Ofertas</a>
+          <a routerLink="/applications" class="hover:text-emerald-800 pb-1 transition-colors">Postulaciones y Contratos</a>
+          <a routerLink="/profile" class="hover:text-emerald-800 pb-1 transition-colors">Mi Perfil</a>
+        </nav>
+      </div>
 
-  <!-- Header / Navbar sobrio -->
-  <header class="flex justify-between items-center pb-12 border-b border-stone-200">
-    <span class="font-bold text-lg tracking-tight text-stone-900">chambitas.</span>
-    <div class="flex items-center gap-6 text-sm text-stone-600 font-medium">
-      <a href="#" class="hover:text-stone-900 transition-colors">Entrar</a>
-      <a href="#" class="bg-stone-900 hover:bg-stone-800 text-stone-50 px-4 py-2 rounded transition-colors text-xs font-semibold">Publicar</a>
+      <button
+        (click)="logout()"
+        class="text-xs font-semibold text-rose-700 bg-rose-100/70 hover:bg-rose-100 px-4 py-2 rounded-lg transition-colors cursor-pointer">
+        Cerrar Sesión
+      </button>
     </div>
   </header>
 
-  <!-- Hero principal -->
-  <main class="py-12">
-    <h1 class="text-3xl sm:text-4xl font-normal text-stone-900 leading-snug tracking-tight max-w-xl">
-      Una red sencilla para encargar u ofrecer trabajos del hogar.
-    </h1>
-
-    <p class="text-stone-600 mt-6 text-base leading-relaxed max-w-lg">
-      Conectamos personas que necesitan resolver un pendiente (plomería, pintura, limpieza) con trabajadores independientes de su colonia. Sin intermediarios ni comisiones raras.
-    </p>
-
-    <!-- Puntos clave en lista limpia, no en cards -->
-    <div class="mt-12 pt-8 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-8">
-      <div>
-        <h2 class="font-semibold text-stone-900 text-sm">Para quien busca ayuda</h2>
-        <p class="text-stone-500 text-xs mt-2 leading-relaxed">
-          Publicas lo que necesitas, recibes postulaciones de vecinos capacitados y acuerdas el precio directo con ellos.
+  <!-- Hero Section -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-10">
+    <div class="bg-gradient-to-r from-emerald-700 via-teal-700 to-sky-600 rounded-2xl p-8 sm:p-12 text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-8">
+      <div class="space-y-3 max-w-xl text-center sm:text-left">
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+          Encuentra y publica chambas locales al instante
+        </h1>
+        <p class="text-teal-50 text-sm leading-relaxed">
+          Conecta con clientes y trabajadores calificados de tu comunidad de forma rápida, transparente y segura.
         </p>
       </div>
 
-      <div>
-        <h2 class="font-semibold text-stone-900 text-sm">Para quien ofrece servicio</h2>
-        <p class="text-stone-500 text-xs mt-2 leading-relaxed">
-          Encuentra chambas cerca de ti, postulate a las que se adapten a tus tiempos y construye tu reputación local.
-        </p>
+      <!-- Botones de Acción Directa -->
+      <div class="flex flex-col gap-3 w-full sm:w-auto shrink-0">
+        <a
+          routerLink="/jobs"
+          class="inline-flex items-center justify-center px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-sm rounded-xl transition-colors cursor-pointer text-center">
+          Ver Ofertas de Trabajo
+        </a>
+        <a
+          routerLink="/profile"
+          class="inline-flex items-center justify-center px-6 py-3 bg-blue-900 hover:bg-blue-950 text-white font-semibold text-sm rounded-xl transition-colors cursor-pointer text-center">
+          Gestionar Mis Habilidades
+        </a>
       </div>
     </div>
 
-    <!-- Llamado a la acción sutil -->
-    <div class="mt-12 pt-8 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <span class="text-xs text-stone-500">¿Tienes un proyecto o tarea pendiente?</span>
-      <div class="flex gap-3">
-        <button class="bg-stone-900 hover:bg-stone-800 text-stone-100 text-xs font-medium px-4 py-2.5 rounded transition-colors">
-          Explorar publicaciones
-        </button>
-        <button class="border border-stone-300 hover:border-stone-400 text-stone-800 text-xs font-medium px-4 py-2.5 rounded transition-colors">
-          Crear cuenta
-        </button>
+    <!-- Catálogo de Habilidades Populares -->
+    <section>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-slate-900">Categorías y Habilidades</h2>
+        <a routerLink="/jobs" class="text-xs font-semibold text-emerald-800 hover:underline">
+          Explorar chambas →
+        </a>
       </div>
-    </div>
+
+      @if (isLoading()) {
+        <div class="py-12 text-center text-sm text-slate-400">Cargando habilidades...</div>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          @for (skill of skills(); track skill.id) {
+            <div class="bg-sky-50 border border-sky-300 p-5 rounded-2xl transition-all">
+              <h3 class="font-bold text-slate-900 text-base mb-1">{{ skill.name }}</h3>
+              <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                {{ skill.description || 'Conecta con clientes y trabajadores calificados.' }}
+              </p>
+            </div>
+          } @empty {
+            <!-- Tarjetas estáticas de muestra si la lista está vacía -->
+            <div class="bg-sky-50 border border-sky-300 p-5 rounded-2xl">
+              <h3 class="font-bold text-slate-900 text-base mb-1">Plomería</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">Conecta con clientes y trabajadores calificados de plomería.</p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-300 p-5 rounded-2xl">
+              <h3 class="font-bold text-slate-900 text-base mb-1">Carpintería</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">Conecta con clientes y trabajadores calificados de carpintería.</p>
+            </div>
+            <div class="bg-amber-50 border border-amber-300 p-5 rounded-2xl">
+              <h3 class="font-bold text-slate-900 text-base mb-1">Electricidad</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">Conecta con clientes y trabajadores calificados de tu comunidad.</p>
+            </div>
+            <div class="bg-orange-50 border border-orange-300 p-5 rounded-2xl">
+              <h3 class="font-bold text-slate-900 text-base mb-1">Jardinería</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">Conecta con clientes y trabajadores calificados de jardinería.</p>
+            </div>
+          }
+        </div>
+      }
+    </section>
   </main>
-
 </div>
