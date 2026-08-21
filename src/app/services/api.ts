@@ -15,7 +15,6 @@ export interface UserSkill {
   skill?: Skill;
 }
 
-// Coincide exactamente con CreateJobDto
 export interface Job {
   id?: number;
   userId: number;
@@ -23,6 +22,7 @@ export interface Job {
   description: string;
   price: number;
   createdAt?: string;
+  status?: string;
 }
 
 export interface Application {
@@ -35,7 +35,6 @@ export interface Application {
   job?: Job;
 }
 
-// Coincide exactamente con CreateContractDto
 export interface Contract {
   id?: number;
   matchId: number;

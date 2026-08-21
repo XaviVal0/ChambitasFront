@@ -6,8 +6,8 @@
         <a routerLink="/" class="text-xl font-bold text-indigo-600">Chambitas</a>
         <nav class="hidden sm:flex space-x-4 text-sm font-medium text-gray-600">
           <a routerLink="/jobs" class="text-indigo-600 font-semibold">Ofertas</a>
-          <a routerLink="/applications" class="hover:text-indigo-600">Postulaciones</a>
-          <a routerLink="/profile" class="hover:text-indigo-600">Mi Perfil</a>
+          <a routerLink="/applications" class="hover:text-indigo-600 transition-colors">Postulaciones y Contratos</a>
+          <a routerLink="/profile" class="hover:text-indigo-600 transition-colors">Mi Perfil</a>
         </nav>
       </div>
 
@@ -19,155 +19,155 @@
     </div>
   </header>
 
-  <!-- Contenido -->
-  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <!-- Contenedor Principal -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-800">Bolsa de Chambas</h2>
-        <p class="text-sm text-gray-500">Explora proyectos o publica uno nuevo.</p>
+        <h1 class="text-2xl font-bold text-gray-900">Bolsa de Chambas</h1>
+        <p class="text-sm text-gray-500">Explora ofertas vigentes o publica un nuevo trabajo.</p>
       </div>
       <button
         (click)="openCreateModal()"
-        class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer">
-        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Publicar Oferta
+        class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer">
+        <span>+</span> Publicar Chamba
       </button>
     </div>
 
+    <!-- Lista de Trabajos Filtrados -->
     @if (isLoading()) {
-      <div class="flex flex-col items-center justify-center py-20">
-        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="mt-4 text-sm text-gray-500">Cargando chambas...</p>
+      <div class="flex justify-center items-center py-16">
+        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <span class="ml-3 text-sm text-gray-500">Cargando ofertas disponibles...</span>
       </div>
     } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        @for (job of jobs(); track job.id) {
-          <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (job of visibleJobs(); track job.id) {
+          <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
             <div>
               <div class="flex items-start justify-between gap-2 mb-2">
-                <h3 class="font-bold text-gray-900 text-lg leading-snug">{{ job.title }}</h3>
-                <span class="text-xs bg-green-100 text-green-800 font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
+                <h3 class="font-bold text-gray-900 text-base leading-snug">{{ job.title }}</h3>
+                <span class="text-xs px-2 py-0.5 rounded-md font-semibold bg-emerald-50 text-emerald-700 whitespace-nowrap">
                   ${{ job.price }} MXN
                 </span>
               </div>
-              <p class="text-sm text-gray-600 leading-relaxed line-clamp-3 mt-2">
+
+              <p class="text-xs text-gray-600 line-clamp-3 mb-4">
                 {{ job.description }}
               </p>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-gray-100 flex justify-end">
-              <button
-                (click)="openApplyModal(job)"
-                class="px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors cursor-pointer">
-                Postularme
-              </button>
+            <div class="border-t border-gray-100 pt-3 flex items-center justify-between mt-auto">
+              <span class="text-[11px] text-gray-400">
+                Publicado por: #{{ job.userId }}
+              </span>
+
+              <!-- CONTROLES DE POSTULACIÓN SEGÚN DUEÑO / ESTADO -->
+              @if (isJobOwner(job)) {
+                <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
+                  Tu publicación
+                </span>
+              } @else if (hasAlreadyApplied(job.id)) {
+                <span class="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg">
+                  ✓ Ya postulado
+                </span>
+              } @else {
+                <button
+                  (click)="openApplyModal(job)"
+                  class="text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                  Postularme
+                </button>
+              }
             </div>
           </div>
         } @empty {
-          <div class="col-span-full bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center text-gray-500">
-            No hay ofertas publicadas aún.
+          <div class="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+            <p class="text-gray-500 text-sm">No hay chambas vigentes disponibles en este momento.</p>
           </div>
         }
       </div>
     }
   </main>
 
-  <!-- MODAL CREAR (CreateJobDto) -->
+  <!-- MODAL: PUBLICAR CHAMBA -->
   @if (showCreateModal()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-      <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Publicar Nueva Oferta</h3>
+    <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900">Publicar Nueva Chamba</h2>
 
-        <form (ngSubmit)="saveJob()" class="space-y-4">
+        <div class="space-y-3 text-sm">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Título</label>
             <input
               type="text"
-              name="title"
               [(ngModel)]="newJob.title"
-              placeholder="Ej. Desarrollador Angular / Instalación eléctrica"
-              required
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              placeholder="Ej. Reparación de tubería"
+              class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Precio / Presupuesto ($ MXN)</label>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Descripción</label>
+            <textarea
+              rows="3"
+              [(ngModel)]="newJob.description"
+              placeholder="Detalla qué requieres..."
+              class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Presupuesto ($ MXN)</label>
             <input
               type="number"
-              name="price"
               [(ngModel)]="newJob.price"
-              placeholder="Ej. 2500"
-              required
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              placeholder="500"
+              class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea
-              name="description"
-              [(ngModel)]="newJob.description"
-              rows="4"
-              placeholder="Detalles del trabajo..."
-              required
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
-          </div>
-
-          <div class="flex justify-end space-x-3 pt-2">
-            <button
-              type="button"
-              (click)="showCreateModal.set(false)"
-              [disabled]="isSubmitting()"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              [disabled]="!newJob.title.trim() || !newJob.description.trim() || newJob.price === null || isSubmitting()"
-              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer">
-              {{ isSubmitting() ? 'Publicando...' : 'Publicar' }}
-            </button>
-          </div>
-        </form>
+        <div class="flex justify-end gap-2 pt-2">
+          <button
+            (click)="showCreateModal.set(false)"
+            class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer">
+            Cancelar
+          </button>
+          <button
+            (click)="saveJob()"
+            [disabled]="isSubmitting()"
+            class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl cursor-pointer disabled:opacity-50">
+            {{ isSubmitting() ? 'Guardando...' : 'Publicar' }}
+          </button>
+        </div>
       </div>
     </div>
   }
 
-  <!-- MODAL POSTULARSE -->
+  <!-- MODAL: POSTULARSE -->
   @if (showApplyModal()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
-        <h3 class="text-lg font-bold text-gray-900 mb-2">Postularme</h3>
-        <p class="text-xs text-gray-500 mb-4">Oferta: <span class="font-medium text-gray-700">{{ selectedJobForApply?.title }}</span></p>
+    <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900">Postularme a: {{ selectedJobForApply?.title }}</h2>
+        <p class="text-xs text-gray-500">Envía un mensaje breve explicando por qué eres el indicado.</p>
 
-        <form (ngSubmit)="submitApplication()" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mensaje de presentación</label>
-            <textarea
-              name="applicationMessage"
-              [(ngModel)]="applicationMessage"
-              rows="3"
-              placeholder="Explica brevemente tu experiencia o propuesta..."
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
-          </div>
+        <div>
+          <textarea
+            rows="3"
+            [(ngModel)]="applicationMessage"
+            placeholder="Hola, tengo experiencia y disponibilidad inmediata..."
+            class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
 
-          <div class="flex justify-end space-x-3 pt-2">
-            <button
-              type="button"
-              (click)="showApplyModal.set(false)"
-              [disabled]="isSubmitting()"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              [disabled]="isSubmitting()"
-              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer">
-              {{ isSubmitting() ? 'Enviando...' : 'Confirmar' }}
-            </button>
-          </div>
-        </form>
+        <div class="flex justify-end gap-2 pt-2">
+          <button
+            (click)="showApplyModal.set(false)"
+            class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer">
+            Cancelar
+          </button>
+          <button
+            (click)="submitApplication()"
+            [disabled]="isSubmitting()"
+            class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl cursor-pointer disabled:opacity-50">
+            {{ isSubmitting() ? 'Enviando...' : 'Confirmar Postulación' }}
+          </button>
+        </div>
       </div>
     </div>
   }

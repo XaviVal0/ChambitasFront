@@ -6,8 +6,6 @@
         <a routerLink="/" class="text-xl font-bold text-indigo-600">Chambitas</a>
         <nav class="hidden sm:flex space-x-4 text-sm font-medium text-gray-600">
           <a routerLink="/jobs" class="hover:text-indigo-600 transition-colors">Ofertas</a>
-
-          <!-- Enlace con Badge Dinámico -->
           <a routerLink="/applications" class="relative inline-flex items-center gap-1.5 text-indigo-600 font-semibold">
             <span>Postulaciones y Contratos</span>
             @if (notificationCount() > 0) {
@@ -16,7 +14,6 @@
               </span>
             }
           </a>
-
           <a routerLink="/profile" class="hover:text-indigo-600 transition-colors">Mi Perfil</a>
         </nav>
       </div>
@@ -35,11 +32,10 @@
     <!-- SECCIÓN 1: POSTULACIONES -->
     <section>
       <div class="mb-4">
-        <h2 class="text-xl font-bold text-gray-800">Postulaciones Recibidas</h2>
-        <p class="text-sm text-gray-500">Revisa las solicitudes y genera los contratos correspondientes.</p>
+        <h2 class="text-xl font-bold text-gray-800">Postulaciones</h2>
+        <p class="text-sm text-gray-500">Solo el creador de la oferta puede aceptar candidatos para formalizar contratos.</p>
       </div>
 
-      <!-- Banner de Alerta para Nuevas Solicitudes -->
       @if (notificationCount() > 0) {
         <div class="mb-5 p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between shadow-xs">
           <div class="flex items-center gap-2.5 text-indigo-900 text-sm font-medium">
@@ -70,7 +66,7 @@
                     [class.text-amber-800]="app.status === 'PENDING' || !app.status"
                     [class.bg-emerald-100]="app.status === 'ACCEPTED'"
                     [class.text-emerald-800]="app.status === 'ACCEPTED'">
-                    {{ app.status || 'PENDING' }}
+                    {{ app.status === 'ACCEPTED' ? 'ACEPTADO' : 'PENDIENTE' }}
                   </span>
                 </div>
 
@@ -82,7 +78,7 @@
                 <div class="flex items-center gap-3 text-xs text-gray-400 pt-0.5">
                   <span>Postulación ID: #{{ app.id }}</span>
                   <span>•</span>
-                  <span>Trabajador ID: #{{ app.userId || app.workerId }}</span>
+                  <span>Postulante ID: #{{ app.userId || app.workerId }}</span>
                   @if (app.job?.price) {
                     <span>•</span>
                     <span class="text-emerald-600 font-medium">${{ app.job?.price }} MXN</span>
@@ -90,22 +86,32 @@
                 </div>
               </div>
 
-              @if (app.status !== 'ACCEPTED') {
-                <button
-                  (click)="acceptAndCreateContract(app)"
-                  [disabled]="isActionLoading()"
-                  class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer whitespace-nowrap self-start sm:self-center">
-                  {{ isActionLoading() ? 'Procesando...' : 'Aceptar y Contratar' }}
-                </button>
-              } @else {
-                <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-md self-start sm:self-center">
-                  Contrato Emitido
-                </span>
-              }
+              <!-- ACCIONES BASADAS EN ROLES -->
+              <div class="self-start sm:self-center">
+                @if (app.status !== 'ACCEPTED') {
+                  <!-- Solo si es el autor de la chamba ve el botón para aceptar -->
+                  @if (isJobOwner(app.jobId || app.job?.id)) {
+                    <button
+                      (click)="acceptAndCreateContract(app)"
+                      [disabled]="isActionLoading()"
+                      class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer whitespace-nowrap">
+                      {{ isActionLoading() ? 'Procesando...' : 'Aceptar y Contratar' }}
+                    </button>
+                  } @else {
+                    <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-md font-medium">
+                      En revisión por el contratante
+                    </span>
+                  }
+                } @else {
+                  <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-100">
+                    ✓ Contrato Emitido
+                  </span>
+                }
+              </div>
             </div>
           } @empty {
             <div class="py-12 text-center text-sm text-gray-500">
-              No hay postulaciones registradas en el sistema por el momento.
+              No hay postulaciones registradas por el momento.
             </div>
           }
         </div>
@@ -115,8 +121,8 @@
     <!-- SECCIÓN 2: CONTRATOS GENERADOS -->
     <section>
       <div class="mb-4">
-        <h2 class="text-xl font-bold text-gray-800">Contratos Activos</h2>
-        <p class="text-sm text-gray-500">Contratos formalizados a partir de los matches creados.</p>
+        <h2 class="text-xl font-bold text-gray-800">Contratos de Trabajo</h2>
+        <p class="text-sm text-gray-500">Seguimiento de contratos en curso y finalizados.</p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -127,8 +133,13 @@
                 <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
                   Contrato #{{ contract.id }}
                 </span>
-                <span class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
-                  {{ contract.status || 'ACTIVO' }}
+                <span
+                  class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  [class.bg-blue-50]="contract.status !== 'COMPLETED'"
+                  [class.text-blue-700]="contract.status !== 'COMPLETED'"
+                  [class.bg-gray-100]="contract.status === 'COMPLETED'"
+                  [class.text-gray-700]="contract.status === 'COMPLETED'">
+                  {{ contract.status === 'COMPLETED' ? 'FINALIZADO' : 'EN CURSO' }}
                 </span>
               </div>
 
@@ -148,13 +159,26 @@
               </div>
             </div>
 
-            <!-- Botón de Calificar -->
+            <!-- BOTÓN FINALIZAR Y CALIFICAR -->
             <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-              <button
-                (click)="openReview(contract)"
-                class="text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
-                <span>★</span> Calificar
-              </button>
+              @if (contract.status === 'COMPLETED') {
+                <span class="text-xs text-gray-400 font-medium italic">
+                  ✓ Chamba concluida y calificada
+                </span>
+              } @else {
+                <!-- Solo el contratante titular puede finalizar y calificar -->
+                @if (isJobOwner(contract.jobId || contract.job?.id)) {
+                  <button
+                    (click)="openFinishAndReview(contract)"
+                    class="text-xs font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
+                    <span>★</span> Finalizar y Calificar
+                  </button>
+                } @else {
+                  <span class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md font-medium">
+                    En desarrollo por trabajador
+                  </span>
+                }
+              }
             </div>
 
           </div>
@@ -168,7 +192,7 @@
 
   </main>
 
-  <!-- Modal de Reseñas -->
+  <!-- Modal de Calificación y Cierre -->
   @if (selectedContractForReview) {
     <app-review-modal
       [contractId]="selectedContractForReview.id!"

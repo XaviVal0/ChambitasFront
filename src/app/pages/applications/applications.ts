@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ApiService, Application, Contract } from '../../services/api';
+import { ApiService, Application, Contract, Job } from '../../services/api';
 import { AuthService } from '../../services/auth';
 import { Notification } from '../../services/notification';
 import { ReviewModal } from '../../components/review-modal/review-modal';
@@ -19,12 +19,11 @@ export class Applications implements OnInit, OnDestroy {
 
   applications = signal<Application[]>([]);
   contracts = signal<Contract[]>([]);
+  myJobs = signal<Job[]>([]);
   isLoading = signal<boolean>(true);
   isActionLoading = signal<boolean>(false);
 
-  // Señal conectada al servicio para el badge y el banner de alerta
   notificationCount = this.notificationService.pendingCount;
-
   currentUser = this.authService.getCurrentUser();
   selectedContractForReview: Contract | null = null;
 
@@ -39,6 +38,18 @@ export class Applications implements OnInit, OnDestroy {
 
   loadData(): void {
     this.isLoading.set(true);
+    // Cargar ofertas creadas por el usuario para validar permisos de autor
+    this.apiService.getJobs().subscribe({
+      next: (jobs) => {
+        const currentUserId = Number(this.currentUser?.id);
+        this.myJobs.set(jobs.filter(j => Number(j.userId) === currentUserId));
+        this.loadApplicationsAndContracts();
+      },
+      error: () => this.loadApplicationsAndContracts()
+    });
+  }
+
+  loadApplicationsAndContracts(): void {
     this.apiService.getApplications().subscribe({
       next: (data) => {
         this.applications.set(data);
@@ -58,6 +69,12 @@ export class Applications implements OnInit, OnDestroy {
     });
   }
 
+  // Comprueba si el usuario autenticado es el autor de la chamba
+  isJobOwner(jobId?: number): boolean {
+    if (!jobId) return false;
+    return this.myJobs().some(j => Number(j.id) === Number(jobId));
+  }
+
   acceptAndCreateContract(app: Application): void {
     const currentUserId = Number(this.currentUser?.id);
     const targetJobId = Number(app.jobId || app.job?.id);
@@ -66,10 +83,10 @@ export class Applications implements OnInit, OnDestroy {
 
     this.isActionLoading.set(true);
 
-    // 1. Aceptar postulación
+    // 1. Aceptar la postulación
     this.apiService.updateApplicationStatus(app.id, 'ACCEPTED').subscribe({
       next: () => {
-        // 2. Crear contrato con el payload esperado
+        // 2. Generar el contrato formal
         const contractPayload = {
           matchId: Number(app.id),
           jobId: targetJobId,
@@ -82,31 +99,39 @@ export class Applications implements OnInit, OnDestroy {
             this.applications.update((list) =>
               list.map(a => a.id === app.id ? { ...a, status: 'ACCEPTED' } : a)
             );
-            // Actualizar el contador de notificaciones de inmediato
             this.notificationService.checkNotifications();
             this.isActionLoading.set(false);
-            alert('¡Contrato formalizado con éxito!');
+            alert('¡Contrato formalizado con éxito! La chamba está en curso.');
           },
           error: (err) => {
             this.isActionLoading.set(false);
-            alert(err.error?.message || 'Error al generar el contrato.');
+            alert(err.error?.message || 'Error al formalizar el contrato.');
           }
         });
       },
       error: (err) => {
         this.isActionLoading.set(false);
-        alert(err.error?.message || 'Error al actualizar postulación.');
+        alert(err.error?.message || 'Error al procesar la postulación.');
       }
     });
   }
 
-  openReview(contract: Contract): void {
+  // Abrir modal para finalizar y calificar
+  openFinishAndReview(contract: Contract): void {
     this.selectedContractForReview = contract;
   }
 
+  // Se ejecuta tras calificar con éxito en el ReviewModal
   onReviewSuccess(): void {
+    if (this.selectedContractForReview?.id) {
+      const contractId = this.selectedContractForReview.id;
+      // Actualizar el estado local del contrato a FINALIZADO
+      this.contracts.update(list =>
+        list.map(c => c.id === contractId ? { ...c, status: 'COMPLETED' } : c)
+      );
+    }
     this.selectedContractForReview = null;
-    alert('¡Reseña registrada con éxito!');
+    alert('¡Chamba finalizada y calificación enviada con éxito!');
   }
 
   logout(): void {
