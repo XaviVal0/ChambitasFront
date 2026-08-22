@@ -1,89 +1,112 @@
 <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
-  <!-- Navbar -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <a routerLink="/" class="text-sm font-medium text-gray-500 hover:text-indigo-600 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-          </svg>
-          Volver a Inicio
-        </a>
+      <div class="flex items-center space-x-6">
+        <a routerLink="/" class="text-xl font-bold text-indigo-600">Chambitas</a>
+        <nav class="hidden sm:flex space-x-4 text-sm font-medium text-gray-600">
+          <a routerLink="/jobs" class="hover:text-indigo-600 transition-colors">Ofertas</a>
+          <a routerLink="/applications" class="hover:text-indigo-600 transition-colors">Postulaciones y Contratos</a>
+          <a routerLink="/profile" class="text-indigo-600 font-semibold">Mi Perfil</a>
+        </nav>
       </div>
 
       <button
         (click)="logout()"
-        class="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-md transition-colors">
+        class="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer">
         Cerrar Sesión
       </button>
     </div>
   </header>
 
-  <!-- Contenido -->
-  <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
-    <!-- Tarjeta de Perfil -->
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
-      <div class="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-2xl">
-        U
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-indigo-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md shrink-0">
+          {{ userInitials() }}
+        </div>
+
+        <div class="flex-1 text-center sm:text-left space-y-1">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+            <h1 class="text-2xl font-extrabold text-gray-900">
+              {{ currentUser?.name || 'Usuario' }}
+            </h1>
+            <span class="inline-block text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full self-center sm:self-auto">
+              ID #{{ currentUser?.id || '---' }}
+            </span>
+          </div>
+
+          <p class="text-sm text-gray-600 font-medium">
+            {{ currentUser?.email || 'Sin correo registrado' }}
+          </p>
+
+          <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-gray-500">
+            <span class="bg-gray-100 px-2.5 py-1 rounded-md font-medium text-gray-700">
+              Rol: {{ currentUser?.role || 'Miembro Activo' }}
+            </span>
+            <span>•</span>
+            <span class="text-emerald-600 font-semibold">● Cuenta Verificada</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <h2 class="text-xl font-bold text-gray-800">Mi Perfil</h2>
-        <p class="text-sm text-gray-500">Administra tus habilidades técnicas vinculadas.</p>
+
+      <div class="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-gray-100 text-center">
+        <div class="p-3 bg-gray-50 rounded-xl">
+          <span class="block text-2xl font-black text-indigo-600">{{ myJobs().length }}</span>
+          <span class="text-xs text-gray-500 font-medium">Chambas Creadas</span>
+        </div>
+        <div class="p-3 bg-gray-50 rounded-xl">
+          <span class="block text-2xl font-black text-indigo-600">{{ myApplications().length }}</span>
+          <span class="text-xs text-gray-500 font-medium">Postulaciones</span>
+        </div>
+        <div class="p-3 bg-gray-50 rounded-xl">
+          <span class="block text-2xl font-black text-indigo-600">{{ myContracts().length }}</span>
+          <span class="text-xs text-gray-500 font-medium">Contratos</span>
+        </div>
       </div>
     </div>
 
-    <!-- Asignar nueva habilidad -->
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-      <h3 class="text-base font-bold text-gray-800 mb-3">Vincular una Habilidad</h3>
+    <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">Mis Habilidades y Oficios</h2>
+        <p class="text-xs text-gray-500">Administra las habilidades asociadas a tu cuenta.</p>
+      </div>
 
       <div class="flex flex-col sm:flex-row gap-3">
         <select
           [(ngModel)]="selectedSkillId"
-          class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-          <option [ngValue]="null" disabled>Selecciona una habilidad del catálogo...</option>
-          @for (skill of allSkills(); track skill.id) {
-            <option [value]="skill.id">{{ skill.name }}</option>
+          class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+          <option [ngValue]="null" disabled selected>Selecciona una habilidad para agregar...</option>
+          @for (skill of availableSkills(); track skill.id) {
+            <option [ngValue]="skill.id">{{ skill.name }}</option>
           }
         </select>
 
         <button
-          (click)="assignSkill()"
-          [disabled]="!selectedSkillId || isAssigning()"
-          class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors cursor-pointer whitespace-nowrap">
-          {{ isAssigning() ? 'Asignando...' : 'Asignar a mi perfil' }}
+          (click)="addSkill()"
+          [disabled]="!selectedSkillId() || isAssigning()"
+          class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl transition-colors cursor-pointer whitespace-nowrap">
+          {{ isAssigning() ? 'Agregando...' : '+ Agregar' }}
         </button>
       </div>
-    </div>
-
-    <!-- Listado de Habilidades Asignadas -->
-    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-      <h3 class="text-base font-bold text-gray-800 mb-4">Habilidades Asignadas</h3>
 
       @if (isLoading()) {
-        <div class="py-10 text-center text-sm text-gray-500 animate-pulse">
-          Cargando tus habilidades...
+        <div class="py-8 text-center text-sm text-gray-500 animate-pulse">
+          Cargando información del perfil...
         </div>
       } @else {
-        <div class="divide-y divide-gray-100">
-          @for (item of mySkills(); track item.id) {
-            <div class="py-3.5 flex items-center justify-between">
-              <div>
-                <span class="font-medium text-gray-900 text-sm">
-                  {{ item.skill?.name || 'Habilidad #' + item.skillId }}
-                </span>
-                @if (item.skill?.description) {
-                  <p class="text-xs text-gray-500 mt-0.5">{{ item.skill?.description }}</p>
-                }
-              </div>
+        <div class="flex flex-wrap gap-2.5">
+          @for (item of myUserSkills(); track item.id) {
+            <span class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs">
+              <span>{{ item.skill?.name || 'Habilidad #' + item.skillId }}</span>
               <button
                 (click)="removeSkill(item.id)"
-                class="text-xs text-red-600 hover:text-red-800 font-medium px-2.5 py-1 rounded hover:bg-red-50 transition-colors">
-                Desvincular
+                class="text-indigo-400 hover:text-red-500 font-bold ml-1 transition-colors cursor-pointer">
+                ×
               </button>
-            </div>
+            </span>
           } @empty {
-            <div class="py-8 text-center text-sm text-gray-500">
-              Aún no tienes habilidades vinculadas a tu cuenta.
+            <div class="w-full text-center py-6 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400">
+              Aún no has agregado ninguna habilidad a tu perfil.
             </div>
           }
         </div>

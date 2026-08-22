@@ -3,6 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
+export interface User {
+  id?: number;
+  email?: string;
+  name?: string;
+  role?: string;
+}
+
 export interface LoginDto {
   email: string;
   password: string;
@@ -49,20 +56,23 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
-  getCurrentUser(): { id?: number; email?: string } | null {
-  const token = this.getToken();
-  if (!token) return null;
 
-  try {
-    const payloadBase64 = token.split('.')[1];
-    const decodedPayload = JSON.parse(atob(payloadBase64));
-    // Los JWT de NestJS suelen guardar el ID en .sub o en .id
-    return {
-      id: decodedPayload.sub || decodedPayload.id || decodedPayload.userId,
-      email: decodedPayload.email || decodedPayload.username
-    };
-  } catch {
-    return null;
+  getCurrentUser(): User | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+
+      return {
+        id: decodedPayload.sub || decodedPayload.id || decodedPayload.userId,
+        email: decodedPayload.email || decodedPayload.username,
+        name: decodedPayload.name || decodedPayload.fullName || decodedPayload.email?.split('@')[0],
+        role: decodedPayload.role || 'Miembro Activo'
+      };
+    } catch {
+      return null;
+    }
   }
-}
 }

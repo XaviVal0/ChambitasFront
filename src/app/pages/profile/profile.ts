@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal,computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService, Skill, UserSkill } from '../../services/api';
 import { AuthService } from '../../services/auth';
+import { Job, Application, Contract } from '../../services/api';
 
 @Component({
   selector: 'app-profile',
@@ -14,85 +15,107 @@ export class Profile implements OnInit {
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
 
+  currentUser = this.authService.getCurrentUser();
+
   allSkills = signal<Skill[]>([]);
-  mySkills = signal<UserSkill[]>([]);
+  myUserSkills = signal<UserSkill[]>([]);
+  myJobs = signal<Job[]>([]);
+  myApplications = signal<Application[]>([]);
+  myContracts = signal<Contract[]>([]);
+
   isLoading = signal<boolean>(true);
   isAssigning = signal<boolean>(false);
-  errorMessage = signal<string | null>(null);
+  selectedSkillId = signal<number | null>(null);
 
-  selectedSkillId: number | null = null;
+  userInitials = computed(() => {
+    const name = this.currentUser?.name || this.currentUser?.email || 'U';
+    return name.slice(0, 2).toUpperCase();
+  });
 
-  currentUserId = this.authService.getCurrentUser()?.id;
+  availableSkills = computed(() => {
+    const assignedIds = new Set(this.myUserSkills().map(us => Number(us.skillId)));
+    return this.allSkills().filter(s => !assignedIds.has(Number(s.id)));
+  });
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadProfileData();
   }
 
-  loadData(): void {
+  loadProfileData(): void {
+    const currentUserId = Number(this.currentUser?.id);
+    if (!currentUserId) {
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
-    this.errorMessage.set(null);
 
     this.apiService.getSkills().subscribe({
-      next: (skills) => {
-        this.allSkills.set(skills);
-        this.loadUserSkills();
-      },
-      error: () => {
-        this.errorMessage.set('Error al cargar la información.');
-        this.isLoading.set(false);
-      }
+      next: (skills) => this.allSkills.set(skills),
+      error: () => {}
     });
-  }
 
-  loadUserSkills(): void {
     this.apiService.getUserSkills().subscribe({
-      next: (allUserSkills) => {
-        if (this.currentUserId) {
-          const filtered = allUserSkills.filter(
-            (item: any) => item.userId === this.currentUserId || item.user?.id === this.currentUserId
-          );
-          this.mySkills.set(filtered);
-        } else {
-          this.mySkills.set(allUserSkills);
-        }
+      next: (userSkills) => {
+        this.myUserSkills.set(userSkills.filter(us => Number(us.userId) === currentUserId));
+      },
+      error: () => {}
+    });
+
+    this.apiService.getJobs().subscribe({
+      next: (jobs) => {
+        this.myJobs.set(jobs.filter(j => Number(j.userId) === currentUserId));
+      },
+      error: () => {}
+    });
+
+    this.apiService.getApplications().subscribe({
+      next: (apps) => {
+        this.myApplications.set(apps.filter(a => Number(a.userId || a.workerId) === currentUserId));
+      },
+      error: () => {}
+    });
+
+    this.apiService.getContracts().subscribe({
+      next: (contracts) => {
+        this.myContracts.set(contracts.filter(c => Number(c.userId) === currentUserId));
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
     });
   }
 
-  assignSkill(): void {
-    if (!this.selectedSkillId || !this.currentUserId) return;
+  addSkill(): void {
+    const skillId = Number(this.selectedSkillId());
+    const userId = Number(this.currentUser?.id);
+
+    if (!skillId || !userId) return;
 
     this.isAssigning.set(true);
 
-    const payload = {
-      userId: Number(this.currentUserId),
-      skillId: Number(this.selectedSkillId)
-    };
-
-    this.apiService.assignSkillToUser(payload).subscribe({
-      next: (newRelation) => {
-        this.mySkills.update((list) => [...list, newRelation]);
-        this.selectedSkillId = null;
+    this.apiService.assignSkillToUser({ userId, skillId }).subscribe({
+      next: (newAssignment) => {
+        const skillObj = this.allSkills().find(s => Number(s.id) === skillId);
+        this.myUserSkills.update(list => [...list, { ...newAssignment, skill: skillObj }]);
+        this.selectedSkillId.set(null);
         this.isAssigning.set(false);
       },
       error: (err) => {
-        alert(err.error?.message || 'No se pudo asignar la habilidad.');
         this.isAssigning.set(false);
+        alert(err.error?.message || 'No se pudo vincular la habilidad.');
       }
     });
   }
 
-  removeSkill(userSkillId: number | undefined): void {
+  removeSkill(userSkillId?: number): void {
     if (!userSkillId) return;
 
     this.apiService.removeUserSkill(userSkillId).subscribe({
       next: () => {
-        this.mySkills.update((list) => list.filter((item) => item.id !== userSkillId));
+        this.myUserSkills.update(list => list.filter(us => us.id !== userSkillId));
       },
       error: (err) => {
-        alert(err.error?.message || 'Error al desvincular la habilidad.');
+        alert(err.error?.message || 'Error al desvincular habilidad.');
       }
     });
   }
